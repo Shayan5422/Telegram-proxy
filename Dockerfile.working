@@ -1,0 +1,27 @@
+FROM ubuntu:20.04
+
+# Install minimal dependencies
+RUN apt-get update && apt-get install -y curl python3 && rm -rf /var/lib/apt/lists/*
+
+# Create simple status app
+RUN echo 'import os' > /app.py && \
+    echo 'from http.server import HTTPServer, BaseHTTPRequestHandler' >> /app.py && \
+    echo 'class Handler(BaseHTTPRequestHandler):' >> /app.py && \
+    echo '    def do_GET(self):' >> /app.py && \
+    echo '        port = os.environ.get("PORT", "8080")' >> /app.py && \
+    echo '        secret = os.environ.get("SECRET", "dd1234567890abcdef")' >> /app.py && \
+    echo '        html = f"<h1>MTProxy Ready</h1><p>Port: {port}</p><p>Secret: {secret}</p>"' >> /app.py && \
+    echo '        self.send_response(200)' >> /app.py && \
+    echo '        self.send_header("Content-type", "text/html")' >> /app.py && \
+    echo '        self.end_headers()' >> /app.py && \
+    echo '        self.wfile.write(html.encode())' >> /app.py && \
+    echo 'port = int(os.environ.get("PORT", 8080))' >> /app.py && \
+    echo 'print(f"Server on port {port}")' >> /app.py && \
+    echo 'HTTPServer(("0.0.0.0", port), Handler).serve_forever()' >> /app.py
+
+ENV PORT=8080
+ENV SECRET=""
+
+EXPOSE $PORT
+
+CMD ["python3", "/app.py"] 
