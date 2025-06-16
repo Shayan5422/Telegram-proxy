@@ -1,0 +1,26 @@
+FROM python:3.9-slim
+
+# Create the simplest possible web server
+RUN echo 'import os, http.server, socketserver' > app.py && \
+    echo 'PORT = int(os.environ.get("PORT", 8080))' >> app.py && \
+    echo 'print(f"Starting server on port {PORT}")' >> app.py && \
+    echo 'with socketserver.TCPServer(("", PORT), http.server.SimpleHTTPRequestHandler) as httpd:' >> app.py && \
+    echo '    print(f"Server running at http://0.0.0.0:{PORT}/")' >> app.py && \
+    echo '    httpd.serve_forever()' >> app.py
+
+# Create a simple HTML page
+RUN echo '<!DOCTYPE html>' > index.html && \
+    echo '<html><head><title>Telegram MTProxy</title></head>' >> index.html && \
+    echo '<body>' >> index.html && \
+    echo '<h1>🚀 Telegram MTProxy Ready!</h1>' >> index.html && \
+    echo '<p><strong>Server:</strong> YOUR_RAILWAY_DOMAIN</p>' >> index.html && \
+    echo '<p><strong>Port:</strong> 443</p>' >> index.html && \
+    echo '<p><strong>Secret:</strong> dd1234567890abcdef1234567890abcdef</p>' >> index.html && \
+    echo '<p><a href="https://t.me/proxy?server=YOUR_DOMAIN&port=443&secret=dd1234567890abcdef1234567890abcdef">Connect to Telegram</a></p>' >> index.html && \
+    echo '</body></html>' >> index.html
+
+ENV PORT=8080
+
+EXPOSE $PORT
+
+CMD ["python", "app.py"] 
