@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  mtproxy:
+    build:
+      context: .
+      dockerfile: Dockerfile.simple
+    ports:
+      - "443:443"
+      - "8080:443"  # Alternative port
+    environment:
+      - PORT=443
+      - SECRET=""  # Will be auto-generated
+    restart: unless-stopped
+    container_name: telegram-mtproxy 

@@ -1,54 +1,56 @@
-FROM ubuntu:22.04
+FROM telegrammessenger/proxy:latest
 
-# Install dependencies
-RUN apt-get update && apt-get install -y \
-    curl \
-    build-essential \
-    libssl-dev \
-    zlib1g-dev \
-    git \
-    xxd \
-    && rm -rf /var/lib/apt/lists/*
+# Set environment variables
+ENV SECRET=""
+ENV WORKERS=1
 
-# Clone and build MTProxy from the community fork
-RUN git clone https://github.com/GetPageSpeed/MTProxy /opt/MTProxy
-WORKDIR /opt/MTProxy
-
-# Build MTProxy
-RUN make
-
-# Create MTProxy directory and copy binary
-RUN mkdir -p /opt/mtproxy && \
-    cp objs/bin/mtproto-proxy /opt/mtproxy/
-
-# Download Telegram configs
-WORKDIR /opt/mtproxy
-RUN curl -s https://core.telegram.org/getProxySecret -o proxy-secret && \
-    curl -s https://core.telegram.org/getProxyConfig -o proxy-multi.conf
-
-# Create mtproxy user
-RUN useradd -m -s /bin/false mtproxy && \
-    chown -R mtproxy:mtproxy /opt/mtproxy
-
-# Create startup script
-RUN echo '#!/bin/bash' > /start.sh && \
-    echo 'SECRET=${SECRET:-$(head -c 16 /dev/urandom | xxd -ps)}' >> /start.sh && \
-    echo 'PORT=${PORT:-443}' >> /start.sh && \
-    echo 'echo "==================================="' >> /start.sh && \
-    echo 'echo "Telegram MTProxy is starting..."' >> /start.sh && \
-    echo 'echo "Port: $PORT"' >> /start.sh && \
-    echo 'echo "Secret: dd$SECRET"' >> /start.sh && \
-    echo 'echo "==================================="' >> /start.sh && \
+# Create a simple startup script
+RUN echo '#!/bin/sh' > /start.sh && \
+    echo 'echo "========================================="' >> /start.sh && \
+    echo 'echo "🚀 Starting Telegram MTProxy..."' >> /start.sh && \
+    echo 'echo "========================================="' >> /start.sh && \
+    echo '' >> /start.sh && \
+    echo '# Generate secret if not provided' >> /start.sh && \
+    echo 'if [ -z "$SECRET" ]; then' >> /start.sh && \
+    echo '  SECRET=$(openssl rand -hex 16)' >> /start.sh && \
+    echo 'fi' >> /start.sh && \
+    echo '' >> /start.sh && \
+    echo '# Use PORT from environment or default to 443' >> /start.sh && \
+    echo 'PROXY_PORT=${PORT:-443}' >> /start.sh && \
+    echo '' >> /start.sh && \
+    echo 'echo "✅ MTProxy Configuration:"' >> /start.sh && \
+    echo 'echo "   Port: $PROXY_PORT"' >> /start.sh && \
+    echo 'echo "   Secret: dd$SECRET"' >> /start.sh && \
+    echo 'echo "   Stats Port: 8888"' >> /start.sh && \
     echo 'echo ""' >> /start.sh && \
-    echo 'echo "Add this proxy to Telegram:"' >> /start.sh && \
-    echo 'echo "Server: YOUR_RAILWAY_DOMAIN"' >> /start.sh && \
-    echo 'echo "Port: $PORT"' >> /start.sh && \
-    echo 'echo "Secret: dd$SECRET"' >> /start.sh && \
+    echo 'echo "📱 Add to Telegram:"' >> /start.sh && \
+    echo 'echo "   Protocol: MTProto"' >> /start.sh && \
+    echo 'echo "   Server: YOUR_APP_DOMAIN"' >> /start.sh && \
+    echo 'echo "   Port: $PROXY_PORT"' >> /start.sh && \
+    echo 'echo "   Secret: dd$SECRET"' >> /start.sh && \
     echo 'echo ""' >> /start.sh && \
-    echo 'echo "==================================="' >> /start.sh && \
-    echo 'exec /opt/mtproxy/mtproto-proxy -u mtproxy -p 8888 -H $PORT -S dd$SECRET --aes-pwd /opt/mtproxy/proxy-secret /opt/mtproxy/proxy-multi.conf -M 1' >> /start.sh && \
+    echo 'echo "🔗 Quick Connect URL:"' >> /start.sh && \
+    echo 'echo "   https://t.me/proxy?server=YOUR_DOMAIN&port=$PROXY_PORT&secret=dd$SECRET"' >> /start.sh && \
+    echo 'echo ""' >> /start.sh && \
+    echo 'echo "========================================="' >> /start.sh && \
+    echo 'echo "🔄 Starting proxy server..."' >> /start.sh && \
+    echo '' >> /start.sh && \
+    echo '# Start the MTProxy server' >> /start.sh && \
+    echo 'exec /mtproto-proxy/mtproto-proxy \' >> /start.sh && \
+    echo '  -u nobody \' >> /start.sh && \
+    echo '  -p 8888 \' >> /start.sh && \
+    echo '  -H $PROXY_PORT \' >> /start.sh && \
+    echo '  -S dd$SECRET \' >> /start.sh && \
+    echo '  --aes-pwd /mtproto-proxy/proxy-secret \' >> /start.sh && \
+    echo '  /mtproto-proxy/proxy-multi.conf \' >> /start.sh && \
+    echo '  -M $WORKERS' >> /start.sh && \
     chmod +x /start.sh
 
+# Expose ports
 EXPOSE $PORT 8888
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:8888/stats || exit 1
 
 CMD ["/start.sh"] 

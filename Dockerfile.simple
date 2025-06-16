@@ -1,0 +1,50 @@
+FROM nineseconds/mtg:2
+
+# Set environment variables
+ENV PORT=443
+ENV SECRET=""
+
+# Create configuration directory
+RUN mkdir -p /app
+
+# Create a simple configuration script
+RUN echo '#!/bin/sh' > /app/start.sh && \
+    echo 'echo "🚀 Starting MTG Proxy..."' >> /app/start.sh && \
+    echo '' >> /app/start.sh && \
+    echo '# Generate secret if not provided' >> /app/start.sh && \
+    echo 'if [ -z "$SECRET" ]; then' >> /app/start.sh && \
+    echo '  SECRET=$(mtg generate-secret | cut -d" " -f2)' >> /app/start.sh && \
+    echo 'fi' >> /app/start.sh && \
+    echo '' >> /app/start.sh && \
+    echo 'PROXY_PORT=${PORT:-443}' >> /app/start.sh && \
+    echo '' >> /app/start.sh && \
+    echo 'echo "========================================="' >> /app/start.sh && \
+    echo 'echo "✅ MTG Proxy Configuration:"' >> /app/start.sh && \
+    echo 'echo "   Port: $PROXY_PORT"' >> /app/start.sh && \
+    echo 'echo "   Secret: $SECRET"' >> /app/start.sh && \
+    echo 'echo ""' >> /app/start.sh && \
+    echo 'echo "📱 Add to Telegram:"' >> /app/start.sh && \
+    echo 'echo "   Protocol: MTProto"' >> /app/start.sh && \
+    echo 'echo "   Server: YOUR_APP_DOMAIN"' >> /app/start.sh && \
+    echo 'echo "   Port: $PROXY_PORT"' >> /app/start.sh && \
+    echo 'echo "   Secret: $SECRET"' >> /app/start.sh && \
+    echo 'echo ""' >> /app/start.sh && \
+    echo 'echo "🔗 Quick Connect:"' >> /app/start.sh && \
+    echo 'echo "https://t.me/proxy?server=YOUR_DOMAIN&port=$PROXY_PORT&secret=$SECRET"' >> /app/start.sh && \
+    echo 'echo "========================================="' >> /app/start.sh && \
+    echo '' >> /app/start.sh && \
+    echo '# Create config file' >> /app/start.sh && \
+    echo 'cat > /app/config.toml << EOF' >> /app/start.sh && \
+    echo 'secret = "$SECRET"' >> /app/start.sh && \
+    echo 'bind-to = "0.0.0.0:$PROXY_PORT"' >> /app/start.sh && \
+    echo 'EOF' >> /app/start.sh && \
+    echo '' >> /app/start.sh && \
+    echo 'echo "🔄 Starting MTG server on port $PROXY_PORT..."' >> /app/start.sh && \
+    echo 'exec mtg run /app/config.toml' >> /app/start.sh && \
+    chmod +x /app/start.sh
+
+WORKDIR /app
+
+EXPOSE $PORT
+
+CMD ["/app/start.sh"] 
