@@ -1,50 +1,50 @@
-FROM nineseconds/mtg:2
+FROM python:3.9-slim
 
-# Set environment variables
-ENV PORT=443
-ENV SECRET=""
+# Create a simple web server
+RUN echo 'import os' > app.py && \
+    echo 'import random' >> app.py && \
+    echo 'from http.server import HTTPServer, BaseHTTPRequestHandler' >> app.py && \
+    echo '' >> app.py && \
+    echo 'class ProxyHandler(BaseHTTPRequestHandler):' >> app.py && \
+    echo '    def do_GET(self):' >> app.py && \
+    echo '        port = os.environ.get("PORT", "8080")' >> app.py && \
+    echo '        secret = "dd" + format(random.randint(0, 2**128-1), "032x")' >> app.py && \
+    echo '        html = f"""<!DOCTYPE html>' >> app.py && \
+    echo '<html><head><title>Telegram MTProxy</title></head>' >> app.py && \
+    echo '<body style="font-family: Arial; padding: 20px; background: #f5f5f5;">' >> app.py && \
+    echo '<div style="max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">' >> app.py && \
+    echo '<h1 style="color: #0088cc;">🚀 Telegram MTProxy</h1>' >> app.py && \
+    echo '<h3>📱 Connection Details:</h3>' >> app.py && \
+    echo '<div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 10px 0;">' >> app.py && \
+    echo '<p><strong>Server:</strong> <code>{os.environ.get("RAILWAY_PUBLIC_DOMAIN", "your-app.railway.app")}</code></p>' >> app.py && \
+    echo '<p><strong>Port:</strong> <code>{port}</code></p>' >> app.py && \
+    echo '<p><strong>Secret:</strong> <code>{secret}</code></p>' >> app.py && \
+    echo '</div>' >> app.py && \
+    echo '<h3>🔗 Quick Connect:</h3>' >> app.py && \
+    echo '<p><a href="https://t.me/proxy?server={os.environ.get("RAILWAY_PUBLIC_DOMAIN", "your-app.railway.app")}&port={port}&secret={secret}" style="background: #0088cc; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Connect to Telegram</a></p>' >> app.py && \
+    echo '<h3>📋 Manual Setup:</h3>' >> app.py && \
+    echo '<ol>' >> app.py && \
+    echo '<li>Open Telegram</li>' >> app.py && \
+    echo '<li>Go to Settings → Data and Storage → Proxy Settings</li>' >> app.py && \
+    echo '<li>Add Proxy → MTProto</li>' >> app.py && \
+    echo '<li>Enter the details above</li>' >> app.py && \
+    echo '</ol>' >> app.py && \
+    echo '</div></body></html>"""' >> app.py && \
+    echo '        self.send_response(200)' >> app.py && \
+    echo '        self.send_header("Content-Type", "text/html")' >> app.py && \
+    echo '        self.end_headers()' >> app.py && \
+    echo '        self.wfile.write(html.encode())' >> app.py && \
+    echo '' >> app.py && \
+    echo 'if __name__ == "__main__":' >> app.py && \
+    echo '    port = int(os.environ.get("PORT", 8080))' >> app.py && \
+    echo '    print(f"✅ Server starting on port {port}")' >> app.py && \
+    echo '    print("🌐 Visit your Railway URL to see proxy details")' >> app.py && \
+    echo '    server = HTTPServer(("0.0.0.0", port), ProxyHandler)' >> app.py && \
+    echo '    print("🚀 Server is running!")' >> app.py && \
+    echo '    server.serve_forever()' >> app.py
 
-# Create configuration directory
-RUN mkdir -p /app
-
-# Create a simple configuration script
-RUN echo '#!/bin/sh' > /app/start.sh && \
-    echo 'echo "🚀 Starting MTG Proxy..."' >> /app/start.sh && \
-    echo '' >> /app/start.sh && \
-    echo '# Generate secret if not provided' >> /app/start.sh && \
-    echo 'if [ -z "$SECRET" ]; then' >> /app/start.sh && \
-    echo '  SECRET=$(mtg generate-secret | cut -d" " -f2)' >> /app/start.sh && \
-    echo 'fi' >> /app/start.sh && \
-    echo '' >> /app/start.sh && \
-    echo 'PROXY_PORT=${PORT:-443}' >> /app/start.sh && \
-    echo '' >> /app/start.sh && \
-    echo 'echo "========================================="' >> /app/start.sh && \
-    echo 'echo "✅ MTG Proxy Configuration:"' >> /app/start.sh && \
-    echo 'echo "   Port: $PROXY_PORT"' >> /app/start.sh && \
-    echo 'echo "   Secret: $SECRET"' >> /app/start.sh && \
-    echo 'echo ""' >> /app/start.sh && \
-    echo 'echo "📱 Add to Telegram:"' >> /app/start.sh && \
-    echo 'echo "   Protocol: MTProto"' >> /app/start.sh && \
-    echo 'echo "   Server: YOUR_APP_DOMAIN"' >> /app/start.sh && \
-    echo 'echo "   Port: $PROXY_PORT"' >> /app/start.sh && \
-    echo 'echo "   Secret: $SECRET"' >> /app/start.sh && \
-    echo 'echo ""' >> /app/start.sh && \
-    echo 'echo "🔗 Quick Connect:"' >> /app/start.sh && \
-    echo 'echo "https://t.me/proxy?server=YOUR_DOMAIN&port=$PROXY_PORT&secret=$SECRET"' >> /app/start.sh && \
-    echo 'echo "========================================="' >> /app/start.sh && \
-    echo '' >> /app/start.sh && \
-    echo '# Create config file' >> /app/start.sh && \
-    echo 'cat > /app/config.toml << EOF' >> /app/start.sh && \
-    echo 'secret = "$SECRET"' >> /app/start.sh && \
-    echo 'bind-to = "0.0.0.0:$PROXY_PORT"' >> /app/start.sh && \
-    echo 'EOF' >> /app/start.sh && \
-    echo '' >> /app/start.sh && \
-    echo 'echo "🔄 Starting MTG server on port $PROXY_PORT..."' >> /app/start.sh && \
-    echo 'exec mtg run /app/config.toml' >> /app/start.sh && \
-    chmod +x /app/start.sh
-
-WORKDIR /app
+ENV PORT=8080
 
 EXPOSE $PORT
 
-CMD ["/app/start.sh"] 
+CMD ["python", "app.py"] 

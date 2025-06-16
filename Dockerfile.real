@@ -1,0 +1,12 @@
+FROM elliptica/mtproxy:latest
+
+# This image comes with MTProxy pre-built and working
+# Set environment variables for Railway
+ENV SECRET=""
+ENV PORT=443
+
+# Expose the port
+EXPOSE $PORT
+
+# The image already has the correct entrypoint
+# It will automatically generate a secret if none is provided 
