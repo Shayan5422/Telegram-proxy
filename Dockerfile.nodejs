@@ -1,0 +1,47 @@
+FROM node:18-alpine
+
+# Install dependencies
+RUN apk add --no-cache curl wget
+
+# Create app directory
+WORKDIR /app
+
+# Create a simple MTG proxy setup using Node.js to download and run mtg
+RUN echo '#!/bin/sh' > start.sh && \
+    echo 'echo "🚀 Downloading MTG Proxy..."' >> start.sh && \
+    echo 'wget -O /app/mtg https://github.com/9seconds/mtg/releases/download/v2.1.6/mtg-2.1.6-linux-amd64' >> start.sh && \
+    echo 'chmod +x /app/mtg' >> start.sh && \
+    echo '' >> start.sh && \
+    echo 'echo "⚙️  Configuring MTG Proxy..."' >> start.sh && \
+    echo 'SECRET=${SECRET:-$(openssl rand -hex 16)}' >> start.sh && \
+    echo 'PROXY_PORT=${PORT:-443}' >> start.sh && \
+    echo '' >> start.sh && \
+    echo 'echo "==============================="' >> start.sh && \
+    echo 'echo "✅ MTG Proxy Ready!"' >> start.sh && \
+    echo 'echo "   Port: $PROXY_PORT"' >> start.sh && \
+    echo 'echo "   Secret: $SECRET"' >> start.sh && \
+    echo 'echo ""' >> start.sh && \
+    echo 'echo "📱 Add to Telegram:"' >> start.sh && \
+    echo 'echo "   Protocol: MTProto"' >> start.sh && \
+    echo 'echo "   Server: [YOUR_DOMAIN]"' >> start.sh && \
+    echo 'echo "   Port: $PROXY_PORT"' >> start.sh && \
+    echo 'echo "   Secret: $SECRET"' >> start.sh && \
+    echo 'echo "==============================="' >> start.sh && \
+    echo '' >> start.sh && \
+    echo 'cat > config.toml << EOF' >> start.sh && \
+    echo 'secret = "$SECRET"' >> start.sh && \
+    echo 'bind-to = "0.0.0.0:$PROXY_PORT"' >> start.sh && \
+    echo 'EOF' >> start.sh && \
+    echo '' >> start.sh && \
+    echo 'echo "🔄 Starting MTG server..."' >> start.sh && \
+    echo './mtg run config.toml' >> start.sh && \
+    chmod +x start.sh
+
+# Set environment variables
+ENV PORT=443
+ENV SECRET=""
+
+# Expose port
+EXPOSE $PORT
+
+CMD ["./start.sh"] 
