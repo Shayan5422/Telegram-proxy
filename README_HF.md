@@ -8,33 +8,70 @@ pinned: false
 license: mit
 ---
 
-# Telegram MTProxy
+# 🚀 تلگرام پروکسی رایگان
 
-A free Telegram MTProxy (MTProto proxy) hosted on Hugging Face Spaces.
+پروکسی رایگان و امن تلگرام با پروتکل MTProto
 
-## What is MTProxy?
+## ✅ وضعیت
 
-MTProxy is Telegram's official proxy protocol that allows you to access Telegram through a proxy server. This is useful for:
-- Bypassing network restrictions
-- Improving connection reliability
-- Accessing Telegram in countries where it might be blocked
+این پروژه شامل یک پروکسی کاملاً کار کرده MTProxy است که بر روی Hugging Face Spaces میزبانی می‌شود.
 
-## How to Use
+## 🔧 نحوه استفاده
 
-1. Visit this Space URL
-2. Copy the proxy details shown on the webpage
-3. In Telegram:
-   - Go to Settings → Data and Storage → Proxy Settings
-   - Add Proxy → MTProto
-   - Enter the details from this Space
+### مرحله 1: Deploy کردن
+1. روی دکمه "Use this template" کلیک کنید
+2. یا کد را fork کنید
+3. منتظر بمانید تا Space build شود (معمولاً 2-3 دقیقه)
 
-## Features
+### مرحله 2: دریافت اطلاعات
+1. پس از اجرا، Space را باز کنید
+2. اطلاعات زیر را مشاهده خواهید کرد:
+   - آدرس سرور
+   - پورت: 8080  
+   - Secret کد
 
-- 🆓 Completely free hosting on Hugging Face
-- 🔒 Secure MTProto protocol
-- 🌐 Easy web interface
-- 📱 One-click Telegram connection
+### مرحله 3: اتصال به تلگرام
 
-## Deployment
+#### روش سریع:
+- روی دکمه "اتصال سریع به تلگرام" کلیک کنید
 
-This Space uses Docker to run a simple web server that provides proxy configuration details. 
+#### روش دستی:
+1. تلگرام را باز کنید
+2. Settings → Data and Storage → Proxy Settings
+3. Add Proxy → MTProto
+4. اطلاعات را وارد کنید:
+   - Server: آدرس Space شما
+   - Port: 8080
+   - Secret: کد نمایش داده شده
+5. Save و Use Proxy را فعال کنید
+
+## 🔍 عیب‌یابی
+
+### اگر پروکسی وصل نمی‌شود:
+
+1. **بررسی وضعیت Space:**
+   - مطمئن شوید Space در حالت "Running" است
+   - منتظر بمانید تا build کامل شود
+
+2. **بررسی اطلاعات:**
+   - آدرس سرور بدون https:// وارد شود
+   - پورت حتماً 8080 باشد
+   - Secret کد را دقیقاً کپی کنید
+
+3. **تست اتصال:**
+   - ابتدا WiFi را امتحان کنید
+   - سپس داده موبایل را تست کنید
+   - VPN‌های دیگر را خاموش کنید
+
+4. **راه‌حل‌های جایگزین:**
+   - از لینک مرورگر استفاده کنید
+   - تلگرام را restart کنید
+   - یک Space جدید ایجاد کنید
+
+## 🌟 ویژگی‌ها
+
+- ✅ کاملاً رایگان
+- 🔒 پروتکل امن MTProto  
+- 🚀 راه‌اندازی آسان
+- 🌐 پشتیبانی از همه دستگاه‌ها
+- �� به‌روزرسانی خودکار 

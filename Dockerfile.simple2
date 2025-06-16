@@ -1,0 +1,83 @@
+FROM python:3.9-slim
+
+WORKDIR /app
+
+# Install required packages
+RUN apt-get update && apt-get install -y \
+    curl \
+    xxd \
+    && rm -rf /var/lib/apt/lists/*
+
+# Download MTProxy directly
+RUN curl -L -o mtprotoproxy.py https://raw.githubusercontent.com/alexbers/mtprotoproxy/master/mtprotoproxy.py
+
+# Generate secret
+RUN head -c 16 /dev/urandom | xxd -ps | sed 's/^/dd/' > secret.txt
+
+# Create startup script
+RUN echo '#!/bin/bash' > start.sh && \
+    echo 'SECRET=$(cat secret.txt)' >> start.sh && \
+    echo 'echo "🚀 Starting MTProxy with secret: $SECRET"' >> start.sh && \
+    echo '' >> start.sh && \
+    echo '# Start MTProxy in background' >> start.sh && \
+    echo 'python3 mtprotoproxy.py -p 8080 -s $SECRET --http-port 7860 &' >> start.sh && \
+    echo 'PROXY_PID=$!' >> start.sh && \
+    echo 'echo "✅ MTProxy started with PID: $PROXY_PID"' >> start.sh && \
+    echo '' >> start.sh && \
+    echo '# Create web interface' >> start.sh && \
+    echo 'cat > index.html << EOF' >> start.sh && \
+    echo '<!DOCTYPE html>' >> start.sh && \
+    echo '<html dir="rtl" lang="fa">' >> start.sh && \
+    echo '<head>' >> start.sh && \
+    echo '    <meta charset="UTF-8">' >> start.sh && \
+    echo '    <title>🚀 MTProxy فعال</title>' >> start.sh && \
+    echo '    <style>' >> start.sh && \
+    echo '        body { font-family: Tahoma, sans-serif; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; direction: rtl; }' >> start.sh && \
+    echo '        .container { max-width: 500px; margin: 50px auto; background: white; border-radius: 15px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }' >> start.sh && \
+    echo '        h1 { color: #0088cc; text-align: center; margin-bottom: 30px; }' >> start.sh && \
+    echo '        .status { background: #28a745; color: white; padding: 15px; border-radius: 8px; text-align: center; margin: 20px 0; font-weight: bold; }' >> start.sh && \
+    echo '        .info { background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0; }' >> start.sh && \
+    echo '        .label { font-weight: bold; color: #495057; margin-bottom: 5px; }' >> start.sh && \
+    echo '        .value { background: white; padding: 10px; border-radius: 5px; border: 1px solid #dee2e6; font-family: monospace; word-break: break-all; }' >> start.sh && \
+    echo '        .btn { background: #0088cc; color: white; padding: 15px 25px; text-decoration: none; border-radius: 8px; display: block; text-align: center; margin: 20px 0; font-weight: bold; }' >> start.sh && \
+    echo '        .btn:hover { background: #006699; }' >> start.sh && \
+    echo '        .manual { background: #6c757d; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: block; text-align: center; margin: 10px 0; font-size: 0.9em; }' >> start.sh && \
+    echo '    </style>' >> start.sh && \
+    echo '</head>' >> start.sh && \
+    echo '<body>' >> start.sh && \
+    echo '    <div class="container">' >> start.sh && \
+    echo '        <h1>🚀 تلگرام پروکسی فعال</h1>' >> start.sh && \
+    echo '        <div class="status">✅ پروکسی آماده و در حال اجرا</div>' >> start.sh && \
+    echo '        <div class="info">' >> start.sh && \
+    echo '            <div class="label">🌐 آدرس سرور:</div>' >> start.sh && \
+    echo '            <div class="value">'"'"'$SPACE_HOST'"'"'</div>' >> start.sh && \
+    echo '        </div>' >> start.sh && \
+    echo '        <div class="info">' >> start.sh && \
+    echo '            <div class="label">🔌 پورت:</div>' >> start.sh && \
+    echo '            <div class="value">8080</div>' >> start.sh && \
+    echo '        </div>' >> start.sh && \
+    echo '        <div class="info">' >> start.sh && \
+    echo '            <div class="label">🔑 رمز عبور (Secret):</div>' >> start.sh && \
+    echo '            <div class="value">'"'"'$SECRET'"'"'</div>' >> start.sh && \
+    echo '        </div>' >> start.sh && \
+    echo '        <a href="tg://proxy?server='"'"'$SPACE_HOST'"'"'&port=8080&secret='"'"'$SECRET'"'"'" class="btn">🔗 اتصال سریع به تلگرام</a>' >> start.sh && \
+    echo '        <a href="https://t.me/proxy?server='"'"'$SPACE_HOST'"'"'&port=8080&secret='"'"'$SECRET'"'"'" class="manual">📱 اتصال از مرورگر</a>' >> start.sh && \
+    echo '        <div style="text-align: center; margin-top: 30px; color: #6c757d; font-size: 0.9em;">' >> start.sh && \
+    echo '            <p>🌟 رایگان و بدون محدودیت</p>' >> start.sh && \
+    echo '            <p>🔒 پروتکل امن MTProto</p>' >> start.sh && \
+    echo '        </div>' >> start.sh && \
+    echo '    </div>' >> start.sh && \
+    echo '</body>' >> start.sh && \
+    echo '</html>' >> start.sh && \
+    echo 'EOF' >> start.sh && \
+    echo '' >> start.sh && \
+    echo '# Start web server' >> start.sh && \
+    echo 'echo "🌐 Starting web server on port 7860"' >> start.sh && \
+    echo 'python3 -m http.server 7860' >> start.sh && \
+    chmod +x start.sh
+
+ENV SPACE_HOST=localhost
+
+EXPOSE 7860 8080
+
+CMD ["./start.sh"] 
